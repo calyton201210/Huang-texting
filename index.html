@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Huang-Texting</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; display: flex; flex-direction: column; height: 100vh; margin: 0; background: #e5ddd5; }
+        header { background: #075e54; color: white; padding: 15px; text-align: center; font-weight: bold; font-size: 1.2rem; }
+        #chat { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 10px; }
+        .msg { background: white; padding: 10px; border-radius: 10px; max-width: 70%; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+        .user { font-size: 0.7rem; color: #128c7e; font-weight: bold; display: block; }
+        #input-area { padding: 15px; background: #f0f0f0; display: flex; gap: 10px; }
+        input { padding: 10px; border: none; border-radius: 20px; outline: none; }
+        #nick { width: 70px; }
+        #msg-input { flex: 1; }
+        button { padding: 10px 20px; border: none; background: #128c7e; color: white; border-radius: 20px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <header>Huang-Texting</header>
+    <div id="chat"></div>
+
+    <form id="input-area">
+        <input id="nick" placeholder="Name" maxlength="10">
+        <input id="msg-input" placeholder="Type a message..." autocomplete="off">
+        <button type="submit">Send</button>
+    </form>
+
+    <script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
+    <script>
+        // Connecting to the database
+        const gun = Gun(['https://gun-manhattan.herokuapp.com/gun']);
+        // 'huang-chat-v1' is your private "room" name
+        const chat = gun.get('huang-chat-v1'); 
+
+        const form = document.getElementById('input-area');
+        const nickInput = document.getElementById('nick');
+        const msgInput = document.getElementById('msg-input');
+        const display = document.getElementById('chat');
+
+        form.onsubmit = (e) => {
+            e.preventDefault();
+            if (msgInput.value) {
+                chat.set({ 
+                    user: nickInput.value || 'Guest', 
+                    body: msgInput.value 
+                });
+                msgInput.value = '';
+            }
+        };
+
+        chat.map().once((data) => {
+            if (!data || !data.body) return;
+            const msgDiv = document.createElement('div');
+            msgDiv.className = 'msg';
+            msgDiv.innerHTML = `<span class="user">${data.user}</span>${data.body}`;
+            display.appendChild(msgDiv);
+            display.scrollTop = display.scrollHeight;
+        });
+    </script>
+</body>
+</html>
